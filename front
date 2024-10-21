@@ -1,0 +1,93 @@
+<form id="lanceForm" action="https://script.google.com/macros/s/AKfycbx5h0DQPBWgzKthlPr4LG8-y77CO3rKf7wq_WZajPNL_NNaRrvrQWxxWwLp7X0HoJa-Mg/exec" method="post" style="max-width: 400px; margin: auto; padding: 20px; background-color: #f9f9f9; border-radius: 10px; box-shadow: 0 0 15px rgba(0, 0, 0, 0.1); font-family: Arial, sans-serif;">
+  <h2 style="text-align: center; color: #333;">Formulário de Lance</h2>
+
+  <label for="cnpj" style="display: block; margin-bottom: 5px; color: #555;">CNPJ:</label>
+  <input type="text" id="cnpj" name="cnpj" placeholder="Digite o CNPJ" required style="width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 5px;" onblur="buscarDadosCNPJ()">
+
+  <label for="email" style="display: block; margin-bottom: 5px; color: #555;">E-mail:</label>
+  <input type="email" id="email" name="email" placeholder="Digite o seu e-mail" required style="width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 5px;">
+
+  <label for="telefone" style="display: block; margin-bottom: 5px; color: #555;">Telefone:</label>
+  <input type="tel" id="telefone" name="telefone" placeholder="Digite o seu telefone" required style="width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 5px;">
+
+  <label for="lote" style="display: block; margin-bottom: 5px; color: #555;">Número do Lote:</label>
+  <input type="text" id="lote" name="lote" placeholder="Digite o número do lote" required style="width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 5px;">
+
+  <label for="lance" style="display: block; margin-bottom: 5px; color: #555;">Valor do Lance (R$):</label>
+  <input type="number" id="lance" name="lance" placeholder="Digite o valor do lance" step="0.01" required style="width: 100%; padding: 10px; margin-bottom: 20px; border: 1px solid #ddd; border-radius: 5px;">
+
+  <input type="submit" id="submitBtn" value="Enviar Lance" style="width: 100%; padding: 10px; background-color: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 16px;">
+  
+  <p style="text-align: center; margin-top: 10px; font-size: 12px; color: #888;">Todos os campos são obrigatórios</p>
+</form>
+
+<div id="response" style="text-align: center; margin-top: 20px; font-size: 16px; color: #333;"></div>
+
+<script>
+  function buscarDadosCNPJ() {
+    var cnpj = document.getElementById('cnpj').value;
+    
+    if (cnpj) {
+      var url = 'https://script.google.com/macros/s/AKfycbx5h0DQPBWgzKthlPr4LG8-y77CO3rKf7wq_WZajPNL_NNaRrvrQWxxWwLp7X0HoJa-Mg/exec?cnpj=' + cnpj;
+
+      fetch(url)
+        .then(response => response.json())
+        .then(data => {
+          if (data.error) {
+            alert("CNPJ não encontrado.");
+          } else {
+            document.getElementById('email').value = data.email; 
+            document.getElementById('telefone').value = data.telefone; 
+          }
+        })
+        .catch(error => {
+          console.error('Erro ao buscar o CNPJ:', error);
+          alert("Erro ao buscar o CNPJ.");
+        });
+    }
+  }
+
+  // Definir a hora limite (15:00 horas)
+  var horaLimite = new Date();
+  horaLimite.setHours(10, 0, 0, 0); // 15:00 horas como limite
+
+  // Função para enviar o formulário de forma assíncrona e bloquear após as 15:00
+  document.getElementById("lanceForm").addEventListener("submit", function(event) {
+    var agora = new Date();
+
+    if (agora > horaLimite) {
+      // Exibir mensagem informando que o prazo expirou
+      document.getElementById("response").textContent = "O prazo para envio de lances encerrou às 15:00. Agradecemos seu interesse.";
+      event.preventDefault(); // Impedir o envio do formulário
+      return;
+    }
+
+    event.preventDefault();  // Prevenir o comportamento padrão do formulário
+    
+    var submitBtn = document.getElementById("submitBtn");
+    submitBtn.disabled = true;
+    submitBtn.value = "Enviando..."; // Mudar o texto do botão para dar feedback
+    
+    var formData = new FormData(this);
+    
+    fetch(this.action, {
+      method: "POST",
+      body: formData
+    })
+    .then(response => response.text())
+    .then(responseText => {
+      document.getElementById("response").textContent = "Seu lance foi enviado com sucesso! Agradecemos sua participação.";
+      document.getElementById("lanceForm").reset();
+      submitBtn.disabled = false;
+      submitBtn.value = "Enviar Lance";
+      setTimeout(function() {
+        document.getElementById("response").textContent = '';
+      }, 2000);
+    })
+    .catch(error => {
+      console.error('Erro no envio do formulário:', error);
+      submitBtn.disabled = false; // Reativar o botão se houver erro
+      submitBtn.value = "Enviar Lance";
+    });
+  });
+</script>
